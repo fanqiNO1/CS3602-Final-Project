@@ -23,7 +23,7 @@ class Vocab():
             self.from_train(filepath, min_freq=min_freq)
 
     def from_train(self, filepath, min_freq=1):
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             trains = json.load(f)
         word_freq = {}
         for data in trains:
@@ -59,16 +59,18 @@ class LabelVocab():
         self.from_filepath(root)
 
     def from_filepath(self, root):
-        ontology = json.load(open(os.path.join(root, 'ontology.json'), 'r'))
-        acts = ontology['acts']
-        slots = ontology['slots']
-
-        for act in acts:
-            for slot in slots:
-                for bi in ['B', 'I']:
-                    idx = len(self.tag2idx)
-                    tag = f'{bi}-{act}-{slot}'
-                    self.tag2idx[tag], self.idx2tag[idx] = idx, tag
+        # ontology = json.load(open(os.path.join(root, 'ontology.json'), 'r'))
+        with open(os.path.join(root, 'ontology.json'), 'r', encoding='utf-8') as f:
+            ontology = json.load(f)
+            acts = ontology['acts']
+            slots = ontology['slots']
+    
+            for act in acts:
+                for slot in slots:
+                    for bi in ['B', 'I']:
+                        idx = len(self.tag2idx)
+                        tag = f'{bi}-{act}-{slot}'
+                        self.tag2idx[tag], self.idx2tag[idx] = idx, tag
 
     def convert_tag_to_idx(self, tag):
         return self.tag2idx[tag]

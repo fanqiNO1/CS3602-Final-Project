@@ -15,13 +15,15 @@ class Example():
 
     @classmethod
     def load_dataset(cls, data_path):
-        dataset = json.load(open(data_path, 'r'))
-        examples = []
-        for di, data in enumerate(dataset):
-            for ui, utt in enumerate(data):
-                ex = cls(utt, f'{di}-{ui}')
-                examples.append(ex)
-        return examples
+        # dataset = json.load(open(data_path, 'r'))
+        with open(data_path, 'r', encoding='utf-8') as f:
+            dataset = json.load(f)
+            examples = []
+            for di, data in enumerate(dataset):
+                for ui, utt in enumerate(data):
+                    ex = cls(utt, f'{di}-{ui}')
+                    examples.append(ex)
+            return examples
 
     def __init__(self, ex: dict, did):
         super(Example, self).__init__()

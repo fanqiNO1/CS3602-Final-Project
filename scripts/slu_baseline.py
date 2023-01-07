@@ -39,7 +39,8 @@ model = SLUTagging(args).to(device)
 Example.word2vec.load_embeddings(model.word_embed, Example.word_vocab, device=device)
 
 if args.testing:
-    check_point = torch.load(open('model.bin', 'rb'), map_location=device)
+    # check_point = torch.load(open('model.bin', 'rb'), map_location=device)
+    check_point = torch.load('model.bin', map_location=device)
     model.load_state_dict(check_point['model'])
     print("Load saved model from root path")
 
@@ -88,13 +89,17 @@ def predict():
             for pi, p in enumerate(pred):
                 did = current_batch.did[pi]
                 predictions[did] = p
-    test_json = json.load(open(test_path, 'r'))
+    # test_json = json.load(open(test_path, 'r'))
+    with open(test_path, 'r', encoding='utf-8') as f:
+        test_json = json.load(f)
     ptr = 0
     for ei, example in enumerate(test_json):
         for ui, utt in enumerate(example):
             utt['pred'] = [pred.split('-') for pred in predictions[f"{ei}-{ui}"]]
             ptr += 1
-    json.dump(test_json, open(os.path.join(args.dataroot, 'prediction.json'), 'w'), indent=4, ensure_ascii=False)
+    # json.dump(test_json, open(os.path.join(args.dataroot, 'prediction.json'), 'w'), indent=4, ensure_ascii=False)
+    with open(os.path.join(args.dataroot, 'prediction.json'), 'w', encoding='utf-8') as f:
+        json.dump(test_json, f, indent=4, ensure_ascii=False)
 
 
 if not args.testing:
@@ -129,10 +134,14 @@ if not args.testing:
         print('Evaluation: \tEpoch: %d\tTime: %.4f\tDev acc: %.2f\tDev fscore(p/r/f): (%.2f/%.2f/%.2f)' % (i, time.time() - start_time, dev_acc, dev_fscore['precision'], dev_fscore['recall'], dev_fscore['fscore']))
         if dev_acc > best_result['dev_acc']:
             best_result['dev_loss'], best_result['dev_acc'], best_result['dev_f1'], best_result['iter'] = dev_loss, dev_acc, dev_fscore, i
+            #torch.save({
+            #    'epoch': i, 'model': model.state_dict(),
+            #    'optim': optimizer.state_dict(),
+            #}, open('model.bin', 'wb'))
             torch.save({
                 'epoch': i, 'model': model.state_dict(),
                 'optim': optimizer.state_dict(),
-            }, open('model.bin', 'wb'))
+            }, "model.bin")
             print('NEW BEST MODEL: \tEpoch: %d\tDev loss: %.4f\tDev acc: %.2f\tDev fscore(p/r/f): (%.2f/%.2f/%.2f)' % (i, dev_loss, dev_acc, dev_fscore['precision'], dev_fscore['recall'], dev_fscore['fscore']))
 
     print('FINAL BEST RESULT: \tEpoch: %d\tDev loss: %.4f\tDev acc: %.4f\tDev fscore(p/r/f): (%.4f/%.4f/%.4f)' % (best_result['iter'], best_result['dev_loss'], best_result['dev_acc'], best_result['dev_f1']['precision'], best_result['dev_f1']['recall'], best_result['dev_f1']['fscore']))
