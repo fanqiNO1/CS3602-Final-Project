@@ -1,8 +1,15 @@
 ### 创建环境
 
-    conda create -n slu python=3.6
-    source activate slu
-    pip install torch==1.7.1
+    ~~conda create -n slu python=3.6~~
+    ~~source activate slu~~
+    ~~pip install torch==1.7.1~~
+    目前已可执行在 python=3.8 pytorch=1.9 环境。
+    conda create -n slu python=3.8
+    conda activate slu
+    conda install pytorch==1.9.0 cudatoolkit=11.1 -c pytorch
+    pip install transformers loguru orjson tqdm
+    pip install gensim jiagu
+
 
 ### 运行
     
@@ -23,6 +30,10 @@
 + `utils/batch.py`:将数据以批为单位转化为输入
 + `model/slu_baseline_tagging.py`:baseline模型
 + `scripts/slu_baseline.py`:主程序脚本
+
+### 日志说明
+
+日志文件保存在`log/`目录下，请在执行后及时更新`result.md`文件。
 
 ### 有关预训练语言模型
 

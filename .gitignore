@@ -1,4 +1,10 @@
 .idea
 .DS_Store
 __pycache__
-model.bin
+*.bin
+*.bz2
+*.tmp
+*.out
+.conda
+kun.w2v.vectors.split-aa
+chinese-word2vec/data
