@@ -8,4 +8,3 @@ __pycache__
 .conda
 kun.w2v.vectors.split-aa
 chinese-word2vec/data
-report
