@@ -3,14 +3,17 @@ import torch
 import torch.nn as nn
 import torch.nn.utils.rnn as rnn_utils
 
+from transformers import BertModel
 
-class SLUTagging(nn.Module):
+
+class SLUBert(nn.Module):
 
     def __init__(self, config):
-        super(SLUTagging, self).__init__()
+        super(SLUBert, self).__init__()
         self.config = config
         self.cell = config.encoder_cell
-        self.word_embed = nn.Embedding(config.vocab_size, config.embed_size, padding_idx=0)
+        # self.word_embed = nn.Embedding(config.vocab_size, config.embed_size, padding_idx=0)
+        self.bert = BertModel.from_pretrained("./BERT")
         self.rnn = getattr(nn, self.cell)(config.embed_size, config.hidden_size // 2, num_layers=config.num_layer, bidirectional=True, batch_first=True)
         self.dropout_layer = nn.Dropout(p=config.dropout)
         self.output_layer = TaggingFNNDecoder(config.hidden_size, config.num_tags, config.tag_pad_idx)
@@ -21,7 +24,7 @@ class SLUTagging(nn.Module):
         input_ids = batch.input_ids # size: (32, c)
         lengths = batch.lengths # [c, 10, 9, 9, 8, 8, ...] len: 32
 
-        embed = self.word_embed(input_ids) # size: (32, c, 768)
+        embed = self.bert(input_ids) # size: (32, c, 768)
         packed_inputs = rnn_utils.pack_padded_sequence(embed, lengths, batch_first=True, enforce_sorted=True) # PackedSequence(), data size: (s, 768), batch_sizes size: (32,), s is sum of batch_sizes
         packed_rnn_out, h_t_c_t = self.rnn(packed_inputs)  # packed_rnn_out: PackedSequence(), data size: (s, 768), batch_sizes size: (32,), s is sum of batch_sizes
         rnn_out, unpacked_len = rnn_utils.pad_packed_sequence(packed_rnn_out, batch_first=True)

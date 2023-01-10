@@ -11,6 +11,10 @@ from utils.example import Example
 from utils.batch import from_example_list
 from utils.vocab import PAD
 from model.slu_baseline_tagging import SLUTagging
+from model.slu_bimodel import SLUBiModel
+from model.slu_multihead import SLUMultiHead
+from model.slu_transformer import SLUTransformer
+from model.slu_bert import SLUBert
 
 # initialization params, output path, logger, random seed and torch.device
 args = init_args(sys.argv[1:])
@@ -23,9 +27,13 @@ print("Use GPU with index %s" % (args.device) if args.device >= 0 else "Use CPU 
 start_time = time.time()
 train_path = os.path.join(args.dataroot, 'train.json')
 dev_path = os.path.join(args.dataroot, 'development.json')
-Example.configuration(args.dataroot, train_path=train_path, word2vec_path=args.word2vec_path)
-train_dataset = Example.load_dataset(train_path)
-dev_dataset = Example.load_dataset(dev_path)
+Example.configuration(args.dataroot, train_path=train_path, word2vec_path=args.word2vec_path, bert_model=args.bert_model, to_vec=args.to_vec)
+if args.correct:
+    train_dataset = Example.load_dataset(train_path, is_correct=True)
+    dev_dataset = Example.load_dataset(dev_path, is_correct=False)
+else:
+    train_dataset = Example.load_dataset(train_path)
+    dev_dataset = Example.load_dataset(dev_path)
 print("Load dataset and database finished, cost %.4fs ..." % (time.time() - start_time))
 print("Dataset size: train -> %d ; dev -> %d" % (len(train_dataset), len(dev_dataset)))
 
@@ -34,8 +42,17 @@ args.pad_idx = Example.word_vocab[PAD]
 args.num_tags = Example.label_vocab.num_tags
 args.tag_pad_idx = Example.label_vocab.convert_tag_to_idx(PAD)
 
-
-model = SLUTagging(args).to(device)
+if args.model == 'baseline':
+    model = SLUTagging(args).to(device)
+elif args.model == 'bimodel':
+    model = SLUBiModel(args).to(device)
+elif args.model == 'multihead':
+    model = SLUMultiHead(args).to(device)
+elif args.model == 'transformer':
+    model = SLUTransformer(args).to(device)
+elif args.model == 'bert':
+    model = SLUBert(args).to(device)
+    raise NotImplementedError
 Example.word2vec.load_embeddings(model.word_embed, Example.word_vocab, device=device)
 
 if args.testing:
@@ -49,7 +66,11 @@ def set_optimizer(model, args):
     params = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
     grouped_params = [{'params': list(set([p for n, p in params]))}]
     optimizer = Adam(grouped_params, lr=args.lr)
-    return optimizer
+    if args.scheduler:
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
+        return optimizer, scheduler
+    else:
+        return optimizer
 
 
 def decode(choice):
@@ -105,7 +126,10 @@ def predict():
 if not args.testing:
     num_training_steps = ((len(train_dataset) + args.batch_size - 1) // args.batch_size) * args.max_epoch
     print('Total training steps: %d' % (num_training_steps))
-    optimizer = set_optimizer(model, args)
+    if args.scheduler:
+        optimizer, scheduler = set_optimizer(model, args)
+    else:
+        optimizer = set_optimizer(model, args)
     nsamples, best_result = len(train_dataset), {'dev_acc': 0., 'dev_f1': 0.}
     train_index, step_size = np.arange(nsamples), args.batch_size
     print('Start training ......')
@@ -124,6 +148,8 @@ if not args.testing:
             optimizer.step()
             optimizer.zero_grad()
             count += 1
+        if args.scheduler:
+            scheduler.step(epoch_loss / count)
         print('Training: \tEpoch: %d\tTime: %.4f\tTraining Loss: %.4f' % (i, time.time() - start_time, epoch_loss / count))
         torch.cuda.empty_cache()
         gc.collect()

@@ -1,0 +1,30 @@
+nohup: ignoring input
+Use GPU with index 3
+Initialization finished ...
+Random seed is set to 999
+Use GPU with index 3
+Some weights of the model checkpoint at ./BERT were not used when initializing BertModel: ['cls.predictions.decoder.weight', 'cls.predictions.bias', 'cls.predictions.transform.LayerNorm.bias', 'cls.seq_relationship.bias', 'cls.predictions.transform.dense.weight', 'cls.predictions.transform.LayerNorm.weight', 'cls.seq_relationship.weight', 'cls.predictions.transform.dense.bias']
+- This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Load dataset and database finished, cost 5.6850s ...
+Dataset size: train -> 5119 ; dev -> 895
+Total training steps: 16000
+Start training ......
+Training: 	Epoch: 0	Time: 7.2381	Training Loss: 1.0730
+Evaluation: 	Epoch: 0	Time: 0.4365	Dev acc: 64.58	Dev fscore(p/r/f): (68.55/65.90/67.20)
+NEW BEST MODEL: 	Epoch: 0	Dev loss: 0.6195	Dev acc: 64.58	Dev fscore(p/r/f): (68.55/65.90/67.20)
+Training: 	Epoch: 1	Time: 6.4929	Training Loss: 0.4865
+Evaluation: 	Epoch: 1	Time: 0.4318	Dev acc: 69.72	Dev fscore(p/r/f): (76.87/70.70/73.66)
+NEW BEST MODEL: 	Epoch: 1	Dev loss: 0.5701	Dev acc: 69.72	Dev fscore(p/r/f): (76.87/70.70/73.66)
+Training: 	Epoch: 2	Time: 6.8006	Training Loss: 0.4037
+Evaluation: 	Epoch: 2	Time: 0.4242	Dev acc: 71.17	Dev fscore(p/r/f): (76.48/73.93/75.19)
+NEW BEST MODEL: 	Epoch: 2	Dev loss: 0.5192	Dev acc: 71.17	Dev fscore(p/r/f): (76.48/73.93/75.19)
+Training: 	Epoch: 3	Time: 6.9623	Training Loss: 0.3566
+Evaluation: 	Epoch: 3	Time: 0.4295	Dev acc: 68.04	Dev fscore(p/r/f): (79.08/69.76/74.13)
+Training: 	Epoch: 4	Time: 6.7870	Training Loss: 0.3114
+Evaluation: 	Epoch: 4	Time: 0.4230	Dev acc: 70.84	Dev fscore(p/r/f): (80.53/72.89/76.52)
+Training: 	Epoch: 5	Time: 6.7894	Training Loss: 0.2777
+Evaluation: 	Epoch: 5	Time: 0.4146	Dev acc: 68.94	Dev fscore(p/r/f): (79.70/72.05/75.68)
+Training: 	Epoch: 6	Time: 6.4240	Training Loss: 0.2508
+Evaluation: 	Epoch: 6	Time: 0.4100	Dev acc: 71.51	Dev fscore(p/r/f): (78.88/74.77/76.77)
+NEW BEST MODEL: 	Epoch: 6	Dev loss: 0.5663	Dev acc: 71.51	Dev fscore(p/r/f): (78.88/74.77/76.77)

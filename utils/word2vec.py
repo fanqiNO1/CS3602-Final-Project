@@ -29,7 +29,7 @@ class Word2vecUtils():
             for line in f:
                 line = line.strip('\n')
                 items = line.split(' ')
-                if len(items) <= 2:
+                if len(items) <= 2: # It is a header
                     continue
                 word = items[0]
                 vector = np.fromstring(' '.join(items[1:]), dtype=float, sep=' ')

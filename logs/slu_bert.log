@@ -1,0 +1,11 @@
+nohup: ignoring input
+Use GPU with index 3
+Initialization finished ...
+Random seed is set to 999
+Use GPU with index 3
+Load dataset and database finished, cost 0.2094s ...
+Dataset size: train -> 5119 ; dev -> 895
+Traceback (most recent call last):
+  File "scripts/slu_baseline.py", line 55, in <module>
+    Example.word2vec.load_embeddings(model.word_embed, Example.word_vocab, device=device)
+AttributeError: type object 'Example' has no attribute 'word2vec'

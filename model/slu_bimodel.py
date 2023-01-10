@@ -1,33 +1,34 @@
-#coding=utf8
 import torch
 import torch.nn as nn
 import torch.nn.utils.rnn as rnn_utils
 
 
-class SLUTagging(nn.Module):
-
+class SLUBiModel(nn.Module):
     def __init__(self, config):
-        super(SLUTagging, self).__init__()
+        super(SLUBiModel, self).__init__()
         self.config = config
         self.cell = config.encoder_cell
         self.word_embed = nn.Embedding(config.vocab_size, config.embed_size, padding_idx=0)
-        self.rnn = getattr(nn, self.cell)(config.embed_size, config.hidden_size // 2, num_layers=config.num_layer, bidirectional=True, batch_first=True)
+        self.encoder = getattr(nn, self.cell)(config.embed_size, config.hidden_size // 2, num_layers=config.num_layer, bidirectional=True, batch_first=True)
         self.dropout_layer = nn.Dropout(p=config.dropout)
+        self.decoder = getattr(nn, self.cell)(config.hidden_size, config.hidden_size // 2, num_layers=config.num_layer, bidirectional=True, batch_first=True)
         self.output_layer = TaggingFNNDecoder(config.hidden_size, config.num_tags, config.tag_pad_idx)
 
     def forward(self, batch):
-        tag_ids = batch.tag_ids # size: (32, c)
-        tag_mask = batch.tag_mask # size: (32, c)
-        input_ids = batch.input_ids # size: (32, c)
-        lengths = batch.lengths # [c, 10, 9, 9, 8, 8, ...] len: 32
+        tag_ids = batch.tag_ids
+        tag_mask = batch.tag_mask
+        input_ids = batch.input_ids
+        lengths = batch.lengths
 
-        embed = self.word_embed(input_ids) # size: (32, c, 768)
-        packed_inputs = rnn_utils.pack_padded_sequence(embed, lengths, batch_first=True, enforce_sorted=True) # PackedSequence(), data size: (s, 768), batch_sizes size: (32,), s is sum of batch_sizes
-        packed_rnn_out, h_t_c_t = self.rnn(packed_inputs)  # packed_rnn_out: PackedSequence(), data size: (s, 768), batch_sizes size: (32,), s is sum of batch_sizes
-        rnn_out, unpacked_len = rnn_utils.pad_packed_sequence(packed_rnn_out, batch_first=True)
-        hiddens = self.dropout_layer(rnn_out)
+        embed = self.word_embed(input_ids)
+
+        packed_inputs = rnn_utils.pack_padded_sequence(embed, lengths, batch_first=True, enforce_sorted=True)
+        packed_encoder_out, h_t_c_t = self.encoder(packed_inputs)
+
+        packed_decoder_out, h_t_c_t = self.decoder(packed_encoder_out, h_t_c_t)
+        decoder_out, unpacked_len = rnn_utils.pad_packed_sequence(packed_decoder_out, batch_first=True)
+        hiddens = self.dropout_layer(decoder_out)
         tag_output = self.output_layer(hiddens, tag_mask, tag_ids)
-
         return tag_output
 
     def decode(self, label_vocab, batch):
@@ -72,7 +73,13 @@ class TaggingFNNDecoder(nn.Module):
     def __init__(self, input_size, num_tags, pad_id):
         super(TaggingFNNDecoder, self).__init__()
         self.num_tags = num_tags
-        self.output_layer = nn.Linear(input_size, num_tags)
+        self.output_layer = nn.Sequential(
+            nn.Linear(input_size, input_size // 2),
+            nn.ReLU(),
+            nn.Linear(input_size // 2, input_size // 4),
+            nn.ReLU(),
+            nn.Linear(input_size // 4, num_tags)
+        )
         self.loss_fct = nn.CrossEntropyLoss(ignore_index=pad_id)
 
     def forward(self, hiddens, mask, labels=None):

@@ -11,9 +11,14 @@ def init_args(params=sys.argv[1:]):
 
 
 def add_argument_base(arg_parser):
+    #### Model configuration ####
+    arg_parser.add_argument('--model', default='baseline', choices=['baseline', 'bimodel', 'multihead', 'transformer'], help='model name')
+    arg_parser.add_argument('--correct', action='store_true', help='whether to use correct dataset')
     #### General configuration ####
     arg_parser.add_argument('--dataroot', default='./data', help='root of data')
+    arg_parser.add_argument('--to_vec', default='word2vec', choices=['word2vec'], help='word2vec or bert')
     arg_parser.add_argument('--word2vec_path', default='./word2vec-768.txt', help='path of word2vector file path')
+    arg_parser.add_argument('--bert_model', default='./BERT', help='path of bert model')
     arg_parser.add_argument('--seed', default=999, type=int, help='Random seed')
     arg_parser.add_argument('--device', type=int, default=-1, help='Use which device: -1 -> cpu ; the index of gpu o.w.')
     arg_parser.add_argument('--testing', action='store_true', help='training or evaluation mode')
@@ -21,10 +26,12 @@ def add_argument_base(arg_parser):
     arg_parser.add_argument('--batch_size', default=32, type=int, help='Batch size')
     arg_parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
     arg_parser.add_argument('--max_epoch', type=int, default=100, help='terminate after maximum epochs')
+    arg_parser.add_argument('--scheduler', action='store_true', help='whether to use scheduler')
     #### Common Encoder Hyperparams ####
     arg_parser.add_argument('--encoder_cell', default='LSTM', choices=['LSTM', 'GRU', 'RNN'], help='root of data')
     arg_parser.add_argument('--dropout', type=float, default=0.2, help='feature dropout rate')
     arg_parser.add_argument('--embed_size', default=768, type=int, help='Size of word embeddings')
     arg_parser.add_argument('--hidden_size', default=512, type=int, help='hidden size')
     arg_parser.add_argument('--num_layer', default=2, type=int, help='number of layer')
+    arg_parser.add_argument('--num_head', default=8, type=int, help='number of head')
     return arg_parser
